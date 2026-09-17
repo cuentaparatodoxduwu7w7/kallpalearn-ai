@@ -4,6 +4,9 @@ import { ArrowLeft, Send, MessageSquare, Sparkles, Lightbulb, HelpCircle, FileTe
 import { useApp } from '../context/AppContext';
 import { aiService } from '../services/ai';
 import { aiRouter } from '../services/ai/router';
+import { ragService } from '../services/rag';
+import { memoryService } from '../services/memory';
+import { learnerProfileService } from '../services/learner-profile';
 import { Button, EmptyState, Badge } from '../components/UI';
 import { TutorMessage } from '../types';
 import { v4 as uuid } from 'uuid';
@@ -37,12 +40,77 @@ export function TutorPage() {
     setLoading(true);
 
     try {
-      const response = await aiService.chatWithTutor(studySet.id, newMessages, text);
+      // Obtener o crear conversación
+      let conversation = memoryService.getActiveConversation(studySet.id);
+      if (!conversation) {
+        conversation = memoryService.createConversation(studySet.id);
+      }
+
+      // Agregar mensaje del usuario a la conversación
+      memoryService.addMessageToConversation(conversation.id, userMsg);
+
+      // Obtener historial reciente
+      const recentMessages = memoryService.getRecentMessages(conversation.id, 10);
+      const conversationHistory = recentMessages.map(m => ({
+        role: m.role as 'user' | 'assistant',
+        content: m.content
+      }));
+
+      // Generar respuesta usando RAG
+      const userId = studySet.userId || 'demo-user';
+      const ragResponse = await ragService.generateResponse(
+        text,
+        studySet.id,
+        userId,
+        conversationHistory.slice(0, -1) // Excluir el último mensaje (el actual)
+      );
+
+      // Formatear respuesta con citas si están disponibles
+      let responseContent = ragResponse.answer;
+      if (ragResponse.citations.length > 0) {
+        const sourceNames: Record<string, string> = {};
+        studySet.sourceFiles.forEach(sf => {
+          sourceNames[sf.id] = sf.name;
+        });
+        const citationsText = ragService.formatCitations(ragResponse.citations, sourceNames);
+        if (citationsText) {
+          responseContent += `\n\n_${citationsText}_`;
+        }
+      }
+
+      const response: TutorMessage = {
+        id: uuid(),
+        role: 'assistant',
+        content: responseContent,
+        timestamp: new Date().toISOString(),
+        suggestions: ['Explícalo más simple', 'Dame un ejemplo', 'Hazme una pregunta']
+      };
+
+      // Agregar respuesta a la conversación
+      memoryService.addMessageToConversation(conversation.id, response);
+
+      // Actualizar contexto de la conversación con los chunks relevantes
+      memoryService.updateConversationContext(conversation.id, {
+        relevantChunks: ragResponse.citations.map(c => c.chunkId)
+      });
+
+      // Detectar preferencias del estudiante
+      learnerProfileService.detectPreferences(userId);
+
+      // Registrar actividad
+      learnerProfileService.recordActivity(userId, studySet.id, 'tutor', 'studied');
+
       const updated = { ...studySet, tutorMessages: [...newMessages, response] };
       saveSet(updated);
       setMessages([...newMessages, response]);
-    } catch {
-      const errorMsg: TutorMessage = { id: uuid(), role: 'assistant', content: 'Hubo un error al procesar tu mensaje. Intenta de nuevo.', timestamp: new Date().toISOString() };
+    } catch (error) {
+      console.error('Error in tutor:', error);
+      const errorMsg: TutorMessage = { 
+        id: uuid(), 
+        role: 'assistant', 
+        content: 'Hubo un error al procesar tu mensaje. Intenta de nuevo.', 
+        timestamp: new Date().toISOString() 
+      };
       setMessages([...newMessages, errorMsg]);
     }
     setLoading(false);

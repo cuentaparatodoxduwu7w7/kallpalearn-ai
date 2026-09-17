@@ -9,6 +9,7 @@ import { chunkingService } from '../chunking';
 import { embeddingsService } from '../embeddings';
 import { studyGenerationService } from '../study-generation';
 import { setsRepository } from '../storage';
+import { knowledgeBaseService } from '../knowledge-base';
 
 export interface IngestionProgress {
   sourceId: string;
@@ -52,14 +53,19 @@ export class IngestionPipeline {
       // 2. Chunking
       onProgress?.({ sourceId: source.id, status: 'chunking', progress: 40, message: 'Dividiendo en fragmentos...' });
       
-      const chunks = chunkingService.chunk(extractedContent, studySetId, source.id);
+      // Obtener userId del StudySet (en producción, esto vendría de la base de datos)
+      const userId = 'demo-user'; // TODO: Obtener del contexto de autenticación
+      const chunks = chunkingService.chunk(extractedContent, userId, studySetId, source.id);
 
       // 3. Indexing (generar embeddings)
       onProgress?.({ sourceId: source.id, status: 'indexing', progress: 60, message: 'Generando índices...' });
       
       const chunksWithEmbeddings = await embeddingsService.generateEmbeddings(chunks);
 
-      // 4. Completed
+      // 4. Guardar chunks en la base de conocimiento
+      knowledgeBaseService.saveChunks(chunksWithEmbeddings);
+
+      // 5. Completed
       onProgress?.({ sourceId: source.id, status: 'completed', progress: 100, message: 'Procesamiento completado' });
 
       return { chunks: chunksWithEmbeddings, extractedContent };
@@ -147,10 +153,12 @@ export class IngestionPipeline {
 
     // Obtener chunks del Study Set (en producción, desde base de datos)
     // Por ahora, usar contenido extraído de las fuentes
+    const userId = studySet.userId || 'demo-user';
     const mockChunks: KnowledgeChunk[] = studySet.sourceFiles
       .filter(s => s.extractedContent)
       .map((s, i) => ({
         id: `chunk_${s.id}_${i}`,
+        userId,
         studySetId: studySet.id,
         sourceId: s.id,
         content: s.extractedContent || '',

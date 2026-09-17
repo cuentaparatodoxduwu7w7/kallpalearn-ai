@@ -25,6 +25,7 @@ export class ChunkingService {
    */
   chunk(
     content: string,
+    userId: string,
     studySetId: string,
     sourceId: string,
     options: ChunkingOptions = {}
@@ -47,18 +48,18 @@ export class ChunkingService {
         if (paragraph.length > opts.maxChunkSize!) {
           // Guardar chunk actual si existe
           if (currentChunk.trim()) {
-            chunks.push(this.createChunk(currentChunk, studySetId, sourceId, paragraphIndex));
+            chunks.push(this.createChunk(currentChunk, userId, studySetId, sourceId, paragraphIndex));
             currentChunk = '';
           }
           // Dividir párrafo largo
           const subChunks = this.splitLongText(paragraph, opts);
           chunks.push(...subChunks.map(text => 
-            this.createChunk(text, studySetId, sourceId, paragraphIndex)
+            this.createChunk(text, userId, studySetId, sourceId, paragraphIndex)
           ));
         } else if (currentChunk.length + paragraph.length > opts.maxChunkSize!) {
           // Guardar chunk actual y empezar nuevo
           if (currentChunk.trim()) {
-            chunks.push(this.createChunk(currentChunk, studySetId, sourceId, paragraphIndex));
+            chunks.push(this.createChunk(currentChunk, userId, studySetId, sourceId, paragraphIndex));
           }
           currentChunk = paragraph;
         } else {
@@ -70,13 +71,13 @@ export class ChunkingService {
 
       // Guardar último chunk
       if (currentChunk.trim()) {
-        chunks.push(this.createChunk(currentChunk, studySetId, sourceId, paragraphIndex));
+        chunks.push(this.createChunk(currentChunk, userId, studySetId, sourceId, paragraphIndex));
       }
     } else {
       // Dividir por tamaño sin respetar párrafos
       const textChunks = this.splitLongText(content, opts);
       chunks.push(...textChunks.map((text, i) => 
-        this.createChunk(text, studySetId, sourceId, i)
+        this.createChunk(text, userId, studySetId, sourceId, i)
       ));
     }
 
@@ -139,12 +140,14 @@ export class ChunkingService {
    */
   private createChunk(
     content: string,
+    userId: string,
     studySetId: string,
     sourceId: string,
     index: number
   ): KnowledgeChunk {
     return {
       id: `chunk_${Date.now()}_${index}`,
+      userId,
       studySetId,
       sourceId,
       content: content.trim(),

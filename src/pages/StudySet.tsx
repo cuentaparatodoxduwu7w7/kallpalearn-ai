@@ -4,12 +4,14 @@ import { useApp } from '../context/AppContext';
 import { Button, ProgressBar, Badge, EmptyState, ConfirmDialog } from '../components/UI';
 import { useState } from 'react';
 import { aiRouter } from '../services/ai/router';
+import { cleanupService } from '../services/cleanup';
 
 export function StudySetPage() {
   const { id } = useParams<{ id: string }>();
-  const { sets, saveSet, addToast } = useApp();
+  const { sets, saveSet, deleteSet, addToast } = useApp();
   const navigate = useNavigate();
   const [showReset, setShowReset] = useState(false);
+  const [showDelete, setShowDelete] = useState(false);
   const studySet = sets.find(s => s.id === id);
 
   if (!studySet) {
@@ -26,6 +28,19 @@ export function StudySetPage() {
     addToast('info', 'Progreso reiniciado');
   };
 
+  const handleDelete = async () => {
+    if (!studySet) return;
+    try {
+      await cleanupService.deleteStudySet(studySet.id, studySet.userId);
+      deleteSet(studySet.id);
+      addToast('success', 'Set eliminado correctamente');
+      navigate('/app/sets');
+    } catch (error) {
+      console.error('Error deleting study set:', error);
+      addToast('error', 'Error al eliminar el set');
+    }
+  };
+
   const sections = [
     { id: 'flashcards', label: 'Flashcards', icon: Brain, path: `/app/set/${id}/flashcards`, color: 'from-orange-400 to-orange-500', count: studySet.flashcards.length },
     { id: 'quiz', label: 'Quiz', icon: FileCheck, path: `/app/set/${id}/quiz`, color: 'from-violet-400 to-violet-500', count: studySet.quiz.questions.length },
@@ -39,6 +54,7 @@ export function StudySetPage() {
   return (
     <div className="space-y-6">
       <ConfirmDialog isOpen={showReset} onClose={() => setShowReset(false)} onConfirm={handleReset} title="Reiniciar progreso" message="¿Estás seguro? Se perderá todo el progreso de este set." />
+      <ConfirmDialog isOpen={showDelete} onClose={() => setShowDelete(false)} onConfirm={handleDelete} title="Eliminar set" message="¿Estás seguro? Se eliminarán todos los datos asociados a este set, incluyendo archivos, chunks, conversaciones y memoria. Esta acción no se puede deshacer." />
 
       {/* Header */}
       <div className="flex items-start gap-4">
@@ -56,6 +72,17 @@ export function StudySetPage() {
             <span>{p.sessionsCompleted} sesiones</span>
           </div>
         </div>
+        <button 
+          onClick={() => setShowDelete(true)} 
+          className="p-2 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition"
+          title="Eliminar set"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 6h18"></path>
+            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+          </svg>
+        </button>
       </div>
 
       {/* Source files status */}

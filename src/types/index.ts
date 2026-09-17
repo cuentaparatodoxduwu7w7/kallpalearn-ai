@@ -188,9 +188,10 @@ export interface Toast {
   message: string;
 }
 
-// Knowledge Chunks - Fragmentos de conocimiento extraídos
+// Knowledge Chunks - Fragmentos de conocimiento extraídos con aislamiento por usuario
 export interface KnowledgeChunk {
   id: string;
+  userId: string;
   studySetId: string;
   sourceId: string;
   content: string;
@@ -203,6 +204,87 @@ export interface KnowledgeChunk {
   };
   embedding?: number[];
   createdAt: string;
+}
+
+// Learner Profile - Perfil de aprendizaje personalizado del estudiante
+export interface LearnerProfile {
+  id: string;
+  userId: string;
+  preferredLanguage: string;
+  studyLevel: 'beginner' | 'intermediate' | 'advanced';
+  subjects: string[];
+  goals: string[];
+  preferredExplanationStyle: 'simple' | 'detailed' | 'examples' | 'visual';
+  difficultyPreference: 'easy' | 'medium' | 'hard' | 'adaptive';
+  commonMistakes: string[];
+  weakTopics: string[];
+  strongTopics: string[];
+  recentStudyActivity: RecentActivity[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RecentActivity {
+  studySetId: string;
+  topic: string;
+  action: 'studied' | 'quiz' | 'reviewed';
+  score?: number;
+  timestamp: string;
+}
+
+// Question Attempt - Intentos de preguntas para tracking de progreso
+export interface QuestionAttempt {
+  id: string;
+  userId: string;
+  studySetId: string;
+  questionId: string;
+  questionType: 'flashcard' | 'quiz' | 'written' | 'fillblank';
+  correct: boolean;
+  confidence?: number;
+  timeSpent?: number;
+  timestamp: string;
+}
+
+// Topic Mastery - Dominio por tema
+export interface TopicMastery {
+  topic: string;
+  studySetId: string;
+  attempts: number;
+  correct: number;
+  incorrect: number;
+  masteryLevel: 'unfamiliar' | 'learning' | 'familiar' | 'mastered';
+  lastAttempt?: string;
+}
+
+// Tutor Conversation - Conversación del tutor con memoria contextual
+export interface TutorConversation {
+  id: string;
+  userId: string;
+  studySetId: string;
+  messages: TutorMessage[];
+  context: ConversationContext;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ConversationContext {
+  activeStudySetId: string;
+  relevantChunks: string[]; // IDs de chunks relevantes para la conversación
+  topic?: string;
+  learnerPreferences?: Partial<LearnerProfile>;
+}
+
+// Memory Item - Items de memoria para el tutor
+export interface MemoryItem {
+  id: string;
+  userId: string;
+  studySetId: string;
+  type: 'fact' | 'preference' | 'mistake' | 'success';
+  content: string;
+  metadata: Record<string, any>;
+  importance: number; // 0-1
+  createdAt: string;
+  lastAccessed?: string;
 }
 
 // Generated Content - Contenido generado con metadatos
