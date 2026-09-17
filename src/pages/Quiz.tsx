@@ -50,32 +50,96 @@ export function QuizPage() {
 
   if (finished) {
     const pct = Math.round((score / questions.length) * 100);
+    const emoji = pct >= 70 ? '🎉' : pct >= 40 ? '💪' : '📚';
+    const message = pct >= 70 ? '¡Excelente trabajo!' : pct >= 40 ? '¡Buen intento!' : 'Sigue practicando';
+    
     return (
-      <div className="max-w-lg mx-auto text-center space-y-6">
-        <div className="bg-white rounded-2xl p-8 border border-gray-100 shadow-sm">
-          <div className={`w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center ${pct >= 70 ? 'bg-green-100' : pct >= 40 ? 'bg-orange-100' : 'bg-red-100'}`}>
-            <span className={`text-3xl font-bold ${pct >= 70 ? 'text-green-600' : pct >= 40 ? 'text-orange-600' : 'text-red-600'}`}>{pct}%</span>
+      <div className="max-w-2xl mx-auto space-y-6 animate-fade-in">
+        {/* Result Card */}
+        <div className="bg-gradient-to-br from-orange-50 via-white to-violet-50 rounded-3xl p-8 border border-gray-100 shadow-lg text-center">
+          <div className="text-6xl mb-4">{emoji}</div>
+          <div className={`w-24 h-24 rounded-full mx-auto mb-5 flex items-center justify-center shadow-lg ${
+            pct >= 70 ? 'bg-gradient-to-br from-green-400 to-green-500' : 
+            pct >= 40 ? 'bg-gradient-to-br from-orange-400 to-orange-500' : 
+            'bg-gradient-to-br from-red-400 to-red-500'
+          }`}>
+            <span className="text-4xl font-bold text-white">{pct}%</span>
           </div>
-          <h2 className="text-xl font-bold text-gray-800 mb-2">
-            {pct >= 70 ? '¡Excelente trabajo!' : pct >= 40 ? '¡Buen intento!' : 'Sigue practicando'}
-          </h2>
-          <p className="text-gray-500 mb-4">Respondiste {score} de {questions.length} correctamente</p>
-          <ProgressBar value={pct} color={pct >= 70 ? 'green' : pct >= 40 ? 'orange' : 'orange'} />
-          <div className="flex gap-3 justify-center mt-6">
-            <Button variant="secondary" onClick={() => navigate(`/app/set/${id}`)}>Volver al set</Button>
-            <Button onClick={() => { setCurrentQ(0); setSelected(null); setShowResult(false); setScore(0); setAnswers([]); setFinished(false); }}>Reintentar</Button>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">{message}</h2>
+          <p className="text-gray-600 mb-5">
+            Respondiste <span className="font-semibold text-gray-800">{score}</span> de <span className="font-semibold text-gray-800">{questions.length}</span> correctamente
+          </p>
+          <div className="max-w-xs mx-auto mb-6">
+            <ProgressBar value={pct} color={pct >= 70 ? 'green' : 'orange'} />
+          </div>
+          <div className="flex gap-3 justify-center">
+            <Button variant="secondary" onClick={() => navigate(`/app/set/${id}`)} className="btn-press">
+              Volver al set
+            </Button>
+            <Button 
+              onClick={() => { setCurrentQ(0); setSelected(null); setShowResult(false); setScore(0); setAnswers([]); setFinished(false); }}
+              className="btn-press"
+            >
+              Reintentar
+            </Button>
           </div>
         </div>
+
         {/* Review */}
-        <div className="space-y-3 text-left">
-          <h3 className="font-semibold text-gray-800">Resumen</h3>
-          {questions.map((q, i) => (
-            <div key={q.id} className={`p-4 rounded-xl border ${answers[i] === q.correctIndex ? 'bg-green-50 border-green-100' : 'bg-red-50 border-red-100'}`}>
-              <p className="text-sm font-medium text-gray-800 mb-1">{i + 1}. {q.question}</p>
-              <p className="text-xs text-gray-600">Tu respuesta: <span className={answers[i] === q.correctIndex ? 'text-green-700' : 'text-red-700'}>{q.options[answers[i] ?? 0]}</span></p>
-              {answers[i] !== q.correctIndex && <p className="text-xs text-green-700 mt-1">Correcta: {q.options[q.correctIndex]}</p>}
+        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+          <h3 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-violet-100 flex items-center justify-center">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-violet-600">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+              </svg>
             </div>
-          ))}
+            Resumen de respuestas
+          </h3>
+          <div className="space-y-3">
+            {questions.map((q, i) => {
+              const isCorrect = answers[i] === q.correctIndex;
+              return (
+                <div 
+                  key={q.id} 
+                  className={`p-4 rounded-xl border-2 transition ${
+                    isCorrect 
+                      ? 'bg-green-50 border-green-200' 
+                      : 'bg-red-50 border-red-200'
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${
+                      isCorrect ? 'bg-green-500' : 'bg-red-500'
+                    }`}>
+                      {isCorrect ? (
+                        <CheckCircle size={14} className="text-white" />
+                      ) : (
+                        <XCircle size={14} className="text-white" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-800 mb-2">{i + 1}. {q.question}</p>
+                      <div className="space-y-1">
+                        <p className="text-xs text-gray-600">
+                          Tu respuesta: <span className={isCorrect ? 'text-green-700 font-medium' : 'text-red-700 font-medium'}>
+                            {q.options[answers[i] ?? 0]}
+                          </span>
+                        </p>
+                        {!isCorrect && (
+                          <p className="text-xs text-green-700 font-medium">
+                            ✓ Correcta: {q.options[q.correctIndex]}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
     );

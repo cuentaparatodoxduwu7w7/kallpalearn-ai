@@ -125,28 +125,85 @@ export function FlashcardsPage() {
 
       {/* Card */}
       <div className="perspective-1000">
-        <div onClick={() => setIsFlipped(!isFlipped)} className={`relative w-full min-h-[280px] sm:min-h-[320px] cursor-pointer transition-transform duration-500 transform-style-preserve-3d ${isFlipped ? 'rotate-y-180' : ''}`} style={{ transformStyle: 'preserve-3d', transform: isFlipped ? 'rotateY(180deg)' : '' }}>
+        <div 
+          onClick={() => setIsFlipped(!isFlipped)} 
+          className="relative w-full min-h-[300px] sm:min-h-[360px] cursor-pointer transition-all duration-500 ease-out group"
+          style={{ transformStyle: 'preserve-3d', transform: isFlipped ? 'rotateY(180deg)' : '' }}
+        >
           {/* Front */}
-          <div className="absolute inset-0 bg-white rounded-2xl border border-gray-100 shadow-lg p-6 sm:p-8 flex flex-col items-center justify-center text-center backface-hidden" style={{ backfaceVisibility: 'hidden' }}>
-            {card?.isDifficult && <Star size={16} className="absolute top-4 right-4 text-yellow-500 fill-yellow-500" />}
-            <p className="text-lg sm:text-xl font-medium text-gray-800">{card?.front}</p>
-            <p className="text-xs text-gray-400 mt-4">Toca para ver la respuesta</p>
+          <div 
+            className="absolute inset-0 bg-white rounded-3xl border-2 border-gray-100 shadow-xl p-8 sm:p-10 flex flex-col items-center justify-center text-center hover:shadow-2xl transition-shadow"
+            style={{ backfaceVisibility: 'hidden' }}
+          >
+            {card?.isDifficult && (
+              <div className="absolute top-4 right-4 flex items-center gap-1 px-2 py-1 rounded-full bg-yellow-50 border border-yellow-200">
+                <Star size={12} className="text-yellow-500 fill-yellow-500" />
+                <span className="text-xs font-medium text-yellow-700">Difícil</span>
+              </div>
+            )}
+            <div className="mb-4">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center mx-auto mb-4">
+                <span className="text-2xl">📝</span>
+              </div>
+            </div>
+            <p className="text-xl sm:text-2xl font-semibold text-gray-800 leading-relaxed">{card?.front}</p>
+            <div className="mt-6 flex items-center gap-2 text-sm text-gray-400">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+              </svg>
+              <span>Toca para ver la respuesta</span>
+            </div>
           </div>
           {/* Back */}
-          <div className="absolute inset-0 bg-gradient-to-br from-orange-50 to-violet-50 rounded-2xl border border-orange-100 shadow-lg p-6 sm:p-8 flex flex-col items-center justify-center text-center" style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
-            <p className="text-base sm:text-lg text-gray-700">{card?.back}</p>
+          <div 
+            className="absolute inset-0 bg-gradient-to-br from-orange-50 via-white to-violet-50 rounded-3xl border-2 border-orange-200 shadow-xl p-8 sm:p-10 flex flex-col items-center justify-center text-center"
+            style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
+          >
+            <div className="mb-4">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-100 to-violet-200 flex items-center justify-center mx-auto mb-4">
+                <span className="text-2xl">💡</span>
+              </div>
+            </div>
+            <p className="text-lg sm:text-xl text-gray-700 leading-relaxed">{card?.back}</p>
           </div>
         </div>
       </div>
 
       {/* Actions */}
-      <div className="flex items-center justify-between">
-        <Button variant="ghost" size="sm" onClick={prev} disabled={currentIndex === 0}><ChevronLeft size={16} /></Button>
-        <div className="flex gap-3">
-          <Button variant="secondary" onClick={() => markCard('unfamiliar')}>No lo sabía</Button>
-          <Button onClick={() => markCard('mastered')}>Lo sabía ✓</Button>
+      <div className="flex items-center justify-between gap-4">
+        <button 
+          onClick={prev} 
+          disabled={currentIndex === 0}
+          className="p-3 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 disabled:opacity-30 disabled:cursor-not-allowed transition btn-press"
+          aria-label="Tarjeta anterior"
+        >
+          <ChevronLeft size={20} />
+        </button>
+        <div className="flex gap-3 flex-1 justify-center">
+          <Button 
+            variant="secondary" 
+            onClick={() => markCard('unfamiliar')}
+            className="btn-press px-6"
+          >
+            <span className="mr-2">❌</span>
+            No lo sabía
+          </Button>
+          <Button 
+            onClick={() => markCard('mastered')}
+            className="btn-press px-6"
+          >
+            <span className="mr-2">✅</span>
+            Lo sabía
+          </Button>
         </div>
-        <Button variant="ghost" size="sm" onClick={next} disabled={currentIndex === cards.length - 1}><ChevronRight size={16} /></Button>
+        <button 
+          onClick={next} 
+          disabled={currentIndex === cards.length - 1}
+          className="p-3 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 disabled:opacity-30 disabled:cursor-not-allowed transition btn-press"
+          aria-label="Siguiente tarjeta"
+        >
+          <ChevronRight size={20} />
+        </button>
       </div>
 
       {/* Card actions */}

@@ -172,16 +172,23 @@ export function CreateSetPage() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-800 mb-1">Crear nuevo set</h1>
-      <p className="text-gray-500 text-sm mb-6">Agrega tu material y elige cómo quieres estudiarlo</p>
+    <div className="max-w-3xl mx-auto animate-fade-in">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold gradient-text">Crear nuevo set</h1>
+        <p className="text-gray-600 text-sm mt-2">Agrega tu material y elige cómo quieres estudiarlo</p>
+      </div>
       
       {/* Demo mode indicator */}
       {aiRouter.isDemoMode() && (
-        <div className="mb-4 p-3 rounded-xl bg-orange-50 border border-orange-200 flex items-start gap-2">
-          <AlertCircle size={16} className="text-orange-600 shrink-0 mt-0.5" />
-          <div className="text-xs text-orange-700">
-            <strong>Modo demostración:</strong> Los archivos se procesarán con contenido de demostración. Para procesamiento real con IA, configura un proveedor en el backend.
+        <div className="mb-5 p-4 rounded-2xl bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 flex items-start gap-3">
+          <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center shrink-0">
+            <AlertCircle size={18} className="text-orange-600" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-orange-800 mb-1">Modo demostración</p>
+            <p className="text-xs text-orange-700">
+              Los archivos se procesarán con contenido de demostración. Para procesamiento real con IA, configura un proveedor en el backend.
+            </p>
           </div>
         </div>
       )}
@@ -211,10 +218,19 @@ export function CreateSetPage() {
 
             {inputMode === 'upload' && (
               <div>
-                <div onDragOver={e => { e.preventDefault(); }} onDrop={e => { e.preventDefault(); handleFiles(e.dataTransfer.files); }} onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center cursor-pointer hover:border-orange-300 hover:bg-orange-50/30 transition">
-                  <Upload size={32} className="mx-auto text-gray-400 mb-3" />
-                  <p className="text-sm font-medium text-gray-700">Arrastra archivos aquí o haz clic para seleccionar</p>
-                  <p className="text-xs text-gray-400 mt-1">PDF, DOC, PPT, JPG, PNG, TXT, MP3, MP4 — Máx. {MAX_FILES} archivos</p>
+                <div 
+                  onDragOver={e => { e.preventDefault(); }} 
+                  onDrop={e => { e.preventDefault(); handleFiles(e.dataTransfer.files); }} 
+                  onClick={() => fileInputRef.current?.click()} 
+                  className="bg-gradient-to-br from-orange-50/50 via-white to-violet-50/50 border-2 border-dashed border-gray-200 rounded-2xl p-10 text-center cursor-pointer hover:border-orange-400 hover:shadow-md transition-all group"
+                >
+                  <div className="w-16 h-16 rounded-2xl bg-white shadow-md flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                    <Upload size={28} className="text-orange-500" />
+                  </div>
+                  <p className="text-base font-semibold text-gray-800 mb-2">Arrastra archivos aquí o haz clic</p>
+                  <p className="text-xs text-gray-500">
+                    PDF, DOC, PPT, JPG, PNG, TXT, MP3, MP4 — Máx. {MAX_FILES} archivos
+                  </p>
                   <input ref={fileInputRef} type="file" multiple accept={ACCEPTED_TYPES.join(',')} className="hidden" onChange={e => handleFiles(e.target.files)} />
                 </div>
 

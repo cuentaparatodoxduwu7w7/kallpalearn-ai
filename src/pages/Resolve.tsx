@@ -83,25 +83,70 @@ export function ResolvePage() {
 
       {!imageUrl && !result && (
         <div className="space-y-4">
-          <div onPaste={handlePaste} className="bg-white rounded-2xl border-2 border-dashed border-gray-200 p-10 text-center hover:border-orange-300 transition focus-within:border-orange-400" tabIndex={0}>
-            <Upload size={40} className="mx-auto text-gray-300 mb-4" />
-            <p className="text-sm font-medium text-gray-700 mb-2">Sube una imagen del ejercicio</p>
-            <p className="text-xs text-gray-400 mb-4">Arrastra, pega (Ctrl+V) o selecciona un archivo</p>
-            <div className="flex gap-3 justify-center">
-              <Button variant="secondary" size="sm" onClick={() => fileInputRef.current?.click()}><Image size={14} className="mr-1" />Seleccionar imagen</Button>
-              <Button variant="secondary" size="sm" onClick={() => cameraInputRef.current?.click()}><Camera size={14} className="mr-1" />Tomar foto</Button>
+          <div 
+            onPaste={handlePaste} 
+            className="bg-gradient-to-br from-orange-50/50 via-white to-violet-50/50 rounded-3xl border-2 border-dashed border-gray-200 p-12 text-center hover:border-orange-400 hover:shadow-lg transition-all focus-within:border-orange-400 focus-within:shadow-lg group cursor-pointer"
+            tabIndex={0}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <div className="w-20 h-20 rounded-2xl bg-white shadow-md flex items-center justify-center mx-auto mb-5 group-hover:scale-110 transition-transform">
+              <Upload size={36} className="text-orange-500" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">Sube una imagen del ejercicio</h3>
+            <p className="text-sm text-gray-500 mb-6 max-w-sm mx-auto">
+              Arrastra una imagen, pégala con <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-xs font-mono">Ctrl+V</kbd> o selecciona un archivo
+            </p>
+            <div className="flex gap-3 justify-center flex-wrap">
+              <button 
+                type="button"
+                onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }} 
+                className="inline-flex items-center justify-center font-medium rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 focus:ring-gray-300 px-3 py-1.5 text-sm btn-press"
+              >
+                <Image size={14} className="mr-1" />
+                Seleccionar imagen
+              </button>
+              <button 
+                type="button"
+                onClick={(e) => { e.stopPropagation(); cameraInputRef.current?.click(); }} 
+                className="inline-flex items-center justify-center font-medium rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 focus:ring-gray-300 px-3 py-1.5 text-sm btn-press"
+              >
+                <Camera size={14} className="mr-1" />
+                Tomar foto
+              </button>
             </div>
             <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={e => e.target.files?.[0] && handleImage(e.target.files[0])} />
             <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={e => e.target.files?.[0] && handleImage(e.target.files[0])} />
+          </div>
+
+          {/* Features */}
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { icon: '📸', title: 'Foto', desc: 'Desde tu cámara' },
+              { icon: '📋', title: 'Pegar', desc: 'Ctrl+V imagen' },
+              { icon: '📁', title: 'Archivo', desc: 'JPG, PNG, WEBP' },
+            ].map((feature, i) => (
+              <div key={i} className="bg-white rounded-xl p-3 border border-gray-100 text-center">
+                <div className="text-2xl mb-1">{feature.icon}</div>
+                <p className="text-xs font-medium text-gray-800">{feature.title}</p>
+                <p className="text-[10px] text-gray-500">{feature.desc}</p>
+              </div>
+            ))}
           </div>
         </div>
       )}
 
       {isProcessing && (
-        <div className="bg-white rounded-2xl p-10 border border-gray-100 text-center">
-          <Loader2 size={40} className="mx-auto text-orange-500 animate-spin mb-4" />
-          <p className="text-sm font-medium text-gray-700">Analizando el ejercicio...</p>
-          <p className="text-xs text-gray-400 mt-1">La IA está detectando y resolviendo el problema</p>
+        <div className="bg-gradient-to-br from-orange-50 to-violet-50 rounded-3xl p-12 border border-gray-100 text-center">
+          <div className="w-20 h-20 rounded-2xl bg-white shadow-lg flex items-center justify-center mx-auto mb-5 animate-pulse-soft">
+            <Loader2 size={36} className="text-orange-500 animate-spin" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-800 mb-2">Analizando el ejercicio...</h3>
+          <p className="text-sm text-gray-500">La IA está detectando y resolviendo el problema</p>
+          <div className="mt-4 flex justify-center gap-1">
+            <div className="w-2 h-2 rounded-full bg-orange-400 animate-bounce" style={{ animationDelay: '0ms' }} />
+            <div className="w-2 h-2 rounded-full bg-orange-400 animate-bounce" style={{ animationDelay: '150ms' }} />
+            <div className="w-2 h-2 rounded-full bg-orange-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+          </div>
         </div>
       )}
 

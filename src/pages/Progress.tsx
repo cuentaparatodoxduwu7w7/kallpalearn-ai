@@ -26,23 +26,26 @@ export function ProgressPage() {
   const maxSessions = Math.max(...last7Days.map(d => d.sessions), 1);
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-800">Tu progreso</h1>
+    <div className="space-y-6 animate-fade-in">
+      <div>
+        <h1 className="text-3xl font-bold gradient-text">Tu progreso</h1>
+        <p className="text-gray-600 text-sm mt-2">Sigue tu evolución y celebra cada logro</p>
+      </div>
 
       {/* Overview stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Dominio general', value: `${masteryPercent}%`, icon: Target, color: 'from-orange-400 to-orange-500' },
-          { label: 'Sets completados', value: sets.length.toString(), icon: BookOpen, color: 'from-violet-400 to-violet-500' },
-          { label: 'Tarjetas dominadas', value: `${masteredCards}/${totalCards}`, icon: Brain, color: 'from-blue-400 to-blue-500' },
-          { label: 'Promedio quiz', value: `${avgQuiz || 0}%`, icon: Award, color: 'from-green-400 to-green-500' },
+          { label: 'Dominio general', value: `${masteryPercent}%`, icon: Target, color: 'from-orange-400 to-orange-500', bg: 'bg-orange-50' },
+          { label: 'Sets completados', value: sets.length.toString(), icon: BookOpen, color: 'from-violet-400 to-violet-500', bg: 'bg-violet-50' },
+          { label: 'Tarjetas dominadas', value: `${masteredCards}/${totalCards}`, icon: Brain, color: 'from-blue-400 to-blue-500', bg: 'bg-blue-50' },
+          { label: 'Promedio quiz', value: `${avgQuiz || 0}%`, icon: Award, color: 'from-green-400 to-green-500', bg: 'bg-green-50' },
         ].map((stat, i) => (
-          <div key={i} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-            <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center mb-3`}>
-              <stat.icon size={18} className="text-white" />
+          <div key={i} className={`${stat.bg} rounded-2xl p-5 border border-gray-100 shadow-sm card-hover`}>
+            <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center mb-3 shadow-sm`}>
+              <stat.icon size={20} className="text-white" />
             </div>
-            <p className="text-2xl font-bold text-gray-800">{stat.value}</p>
-            <p className="text-xs text-gray-500">{stat.label}</p>
+            <p className="text-3xl font-bold text-gray-800">{stat.value}</p>
+            <p className="text-xs text-gray-600 mt-1 font-medium">{stat.label}</p>
           </div>
         ))}
       </div>
@@ -64,17 +67,33 @@ export function ProgressPage() {
       </div>
 
       {/* Activity chart */}
-      <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
-        <h2 className="font-semibold text-gray-800 mb-4">Actividad de los últimos 7 días</h2>
-        <div className="flex items-end gap-2 h-32">
-          {last7Days.map((day, i) => (
-            <div key={i} className="flex-1 flex flex-col items-center gap-1">
-              <div className="w-full flex flex-col justify-end h-24">
-                <div className="w-full bg-gradient-to-t from-orange-400 to-orange-300 rounded-t-md transition-all" style={{ height: `${(day.sessions / maxSessions) * 100}%`, minHeight: day.sessions > 0 ? '8px' : '2px' }} />
+      <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm card-hover">
+        <h2 className="font-semibold text-gray-800 mb-5 flex items-center gap-2 text-lg">
+          <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center">
+            <TrendingUp size={16} className="text-orange-600" />
+          </div>
+          Actividad de los últimos 7 días
+        </h2>
+        <div className="flex items-end gap-3 h-40">
+          {last7Days.map((day, i) => {
+            const height = (day.sessions / maxSessions) * 100;
+            return (
+              <div key={i} className="flex-1 flex flex-col items-center gap-2 group">
+                <div className="w-full flex flex-col justify-end h-28 relative">
+                  {day.sessions > 0 && (
+                    <div className="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+                      {day.sessions} {day.sessions === 1 ? 'sesión' : 'sesiones'}
+                    </div>
+                  )}
+                  <div 
+                    className="w-full bg-gradient-to-t from-orange-500 to-orange-300 rounded-t-lg transition-all hover:from-orange-600 hover:to-orange-400 cursor-pointer"
+                    style={{ height: `${Math.max(height, day.sessions > 0 ? 10 : 3)}%` }}
+                  />
+                </div>
+                <span className="text-xs text-gray-500 font-medium">{day.day}</span>
               </div>
-              <span className="text-[10px] text-gray-400">{day.day}</span>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
