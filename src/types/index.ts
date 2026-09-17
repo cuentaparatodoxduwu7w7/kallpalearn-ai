@@ -39,11 +39,24 @@ export interface SourceFile {
   name: string;
   size: number;
   type: string;
-  status: 'uploading' | 'processing' | 'completed' | 'error';
+  status: SourceStatus;
   progress: number;
   url?: string;
   errorMessage?: string;
+  extractedContent?: string;
+  metadata?: Record<string, any>;
 }
+
+export type SourceStatus = 
+  | 'queued'
+  | 'uploading'
+  | 'processing'
+  | 'extracting'
+  | 'chunking'
+  | 'indexing'
+  | 'generating'
+  | 'completed'
+  | 'error';
 
 export interface Flashcard {
   id: string;
@@ -173,4 +186,44 @@ export interface Toast {
   id: string;
   type: 'success' | 'error' | 'info' | 'warning';
   message: string;
+}
+
+// Knowledge Chunks - Fragmentos de conocimiento extraídos
+export interface KnowledgeChunk {
+  id: string;
+  studySetId: string;
+  sourceId: string;
+  content: string;
+  metadata: {
+    pageNumber?: number;
+    slideNumber?: number;
+    timestamp?: number;
+    section?: string;
+    heading?: string;
+  };
+  embedding?: number[];
+  createdAt: string;
+}
+
+// Generated Content - Contenido generado con metadatos
+export interface GeneratedContent {
+  id: string;
+  studySetId: string;
+  type: 'flashcards' | 'quiz' | 'written' | 'fillblanks' | 'notes' | 'tutor' | 'podcast';
+  sourceIds: string[];
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+  status: 'generating' | 'completed' | 'error';
+  errorMessage?: string;
+}
+
+// Ingestion Pipeline State
+export interface IngestionState {
+  studySetId: string;
+  sources: SourceFile[];
+  chunks: KnowledgeChunk[];
+  generatedContent: Record<string, GeneratedContent>;
+  overallProgress: number;
+  status: 'idle' | 'processing' | 'completed' | 'error';
 }

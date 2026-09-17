@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Mail, Globe, Clock, Bell, Shield, LogOut, Camera } from 'lucide-react';
+import { User, Mail, Globe, Clock, Bell, Shield, LogOut, Camera, Cpu, Zap } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { Button, Input } from '../components/UI';
+import { Button, Input, Badge } from '../components/UI';
+import { aiRouter } from '../services/ai/router';
+import { configService } from '../services/config';
 
 export function SettingsPage() {
   const { user, logout, addToast } = useApp();
@@ -97,6 +99,51 @@ export function SettingsPage() {
         <h2 className="font-semibold text-gray-800 mb-4 flex items-center gap-2"><Shield size={16} className="text-green-500" />Privacidad</h2>
         <p className="text-sm text-gray-600 mb-3">Tu información personal está segura. No compartimos tus datos con terceros.</p>
         <p className="text-xs text-gray-400">Los datos se almacenan localmente en tu navegador hasta que conectemos el backend seguro.</p>
+      </div>
+
+      {/* AI Configuration */}
+      <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+        <h2 className="font-semibold text-gray-800 mb-4 flex items-center gap-2"><Cpu size={16} className="text-violet-500" />Configuración de IA</h2>
+        
+        <div className="space-y-4">
+          <div className="p-4 rounded-xl bg-gray-50 border border-gray-100">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-gray-700">Proveedor de IA</span>
+              <Badge color={aiRouter.isDemoMode() ? 'orange' : 'green'}>
+                {aiRouter.isDemoMode() ? 'Demo' : 'Activo'}
+              </Badge>
+            </div>
+            <p className="text-xs text-gray-500">
+              {aiRouter.isDemoMode() 
+                ? 'Usando contenido de demostración. Conecta un proveedor de IA en el backend para procesamiento real.'
+                : 'Proveedor de IA configurado y activo.'}
+            </p>
+          </div>
+
+          <div className="p-4 rounded-xl bg-gray-50 border border-gray-100">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-gray-700">Embeddings</span>
+              <Badge color={configService.getConfig().embeddings.enabled ? 'green' : 'gray'}>
+                {configService.getConfig().embeddings.enabled ? 'Habilitado' : 'Deshabilitado'}
+              </Badge>
+            </div>
+            <p className="text-xs text-gray-500">
+              {configService.getConfig().embeddings.enabled
+                ? 'Generación de embeddings activa para búsqueda semántica.'
+                : 'Embeddings deshabilitados.'}
+            </p>
+          </div>
+
+          <div className="p-4 rounded-xl bg-orange-50 border border-orange-100">
+            <div className="flex items-start gap-2">
+              <Zap size={16} className="text-orange-600 shrink-0 mt-0.5" />
+              <div className="text-xs text-orange-700">
+                <strong>Nota de seguridad:</strong> Las API keys se manejan en el backend, nunca en el frontend. 
+                Para configurar proveedores de IA, edita las variables de entorno en el servidor.
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Actions */}

@@ -1,10 +1,12 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Upload, FileText, Link, Mic, X, CheckCircle, Loader2, Plus, BookOpen, Brain, MessageSquare, Headphones, FileCheck, PenTool, Radio } from 'lucide-react';
+import { Upload, FileText, Link, Mic, X, CheckCircle, Loader2, Plus, BookOpen, Brain, MessageSquare, Headphones, FileCheck, PenTool, Radio, AlertCircle } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { Button } from '../components/UI';
-import { StudySet, SourceFile } from '../types';
+import { Button, Badge } from '../components/UI';
+import { StudySet, SourceFile, SourceStatus } from '../types';
 import { v4 as uuid } from 'uuid';
+import { ingestionPipeline } from '../services/ingestion';
+import { aiRouter } from '../services/ai/router';
 
 const ACCEPTED_TYPES = ['.pdf','.doc','.docx','.ppt','.pptx','.jpg','.jpeg','.png','.webp','.txt','.mp3','.wav','.m4a','.mp4'];
 const MAX_FILES = 10;
@@ -73,13 +75,14 @@ export function CreateSetPage() {
     if (!title.trim()) { addToast('warning', 'Por favor ingresa un nombre para el set'); return; }
     if (selectedMethods.length === 0) { addToast('warning', 'Selecciona al menos un método de estudio'); return; }
     setIsGenerating(true);
-    await new Promise(r => setTimeout(r, 2000));
+    
+    // Crear Study Set inicial
     const newSet: StudySet = {
       id: uuid(),
       userId: user?.id || '',
       title: title.trim(),
       description: `Set de estudio creado con ${selectedMethods.length} métodos.`,
-      sourceFiles: files.filter(f => f.status === 'completed'),
+      sourceFiles: files.filter(f => f.status === 'completed' || f.status === 'uploading'),
       flashcards: [],
       quiz: { id: uuid(), questions: [] },
       writtenTest: { id: uuid(), questions: [] },
@@ -90,10 +93,54 @@ export function CreateSetPage() {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
+    
+    // Guardar set inicial
     saveSet(newSet);
-    setIsGenerating(false);
-    addToast('success', '¡Set creado exitosamente!');
-    navigate(`/app/set/${newSet.id}`);
+    
+    // Ejecutar pipeline de ingestión
+    try {
+      const contentTypes = selectedMethods.map(m => m as 'flashcards' | 'quiz' | 'written' | 'fillblanks' | 'notes' | 'podcast');
+      
+      const processedSet = await ingestionPipeline.runFullPipeline(
+        newSet,
+        contentTypes,
+        {
+          onProgress: (progress) => {
+            // Actualizar estado de las fuentes
+            const updatedFiles = newSet.sourceFiles.map(f => 
+              f.id === progress.sourceId 
+                ? { ...f, status: progress.status as SourceStatus, progress: progress.progress }
+                : f
+            );
+            newSet.sourceFiles = updatedFiles;
+            saveSet(newSet);
+          },
+          onComplete: (finalSet) => {
+            saveSet(finalSet);
+          },
+          onError: (error, sourceId) => {
+            console.error('Error en pipeline:', error);
+            if (sourceId) {
+              addToast('error', `Error procesando fuente: ${error.message}`);
+            }
+          }
+        }
+      );
+      
+      setIsGenerating(false);
+      addToast('success', '¡Set creado y procesado exitosamente!');
+      
+      // Mostrar mensaje si está en modo demo
+      if (aiRouter.isDemoMode()) {
+        addToast('info', 'Modo demostración: Conecta un proveedor de IA para procesamiento real');
+      }
+      
+      navigate(`/app/set/${processedSet.id}`);
+    } catch (error) {
+      setIsGenerating(false);
+      addToast('error', 'Error al procesar el set. Intenta de nuevo.');
+      console.error(error);
+    }
   };
 
   const formatSize = (bytes: number) => {
@@ -106,6 +153,16 @@ export function CreateSetPage() {
     <div className="max-w-3xl mx-auto">
       <h1 className="text-2xl font-bold text-gray-800 mb-1">Crear nuevo set</h1>
       <p className="text-gray-500 text-sm mb-6">Agrega tu material y elige cómo quieres estudiarlo</p>
+      
+      {/* Demo mode indicator */}
+      {aiRouter.isDemoMode() && (
+        <div className="mb-4 p-3 rounded-xl bg-orange-50 border border-orange-200 flex items-start gap-2">
+          <AlertCircle size={16} className="text-orange-600 shrink-0 mt-0.5" />
+          <div className="text-xs text-orange-700">
+            <strong>Modo demostración:</strong> Los archivos se procesarán con contenido de demostración. Para procesamiento real con IA, configura un proveedor en el backend.
+          </div>
+        </div>
+      )}
 
       {step === 'input' && (
         <div className="space-y-6">
@@ -146,12 +203,27 @@ export function CreateSetPage() {
                         <FileText size={18} className="text-orange-500 shrink-0" />
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-gray-700 truncate">{f.name}</p>
-                          <p className="text-xs text-gray-400">{formatSize(f.size)}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-xs text-gray-400">{formatSize(f.size)}</p>
+                            {f.status === 'extracting' && <Badge color="orange">Extrayendo...</Badge>}
+                            {f.status === 'chunking' && <Badge color="orange">Dividiendo...</Badge>}
+                            {f.status === 'indexing' && <Badge color="violet">Indexando...</Badge>}
+                            {f.status === 'generating' && <Badge color="violet">Generando...</Badge>}
+                          </div>
                         </div>
-                        {f.status === 'uploading' && <span className="text-xs text-blue-500">{Math.round(f.progress)}%</span>}
-                        {f.status === 'processing' && <Loader2 size={16} className="text-orange-500 animate-spin" />}
+                        {(f.status === 'uploading' || f.status === 'processing' || f.status === 'extracting' || f.status === 'chunking' || f.status === 'indexing' || f.status === 'generating') && (
+                          <div className="flex items-center gap-2">
+                            <Loader2 size={14} className="text-orange-500 animate-spin" />
+                            <span className="text-xs text-gray-500">{Math.round(f.progress)}%</span>
+                          </div>
+                        )}
                         {f.status === 'completed' && <CheckCircle size={16} className="text-green-500" />}
-                        {f.status === 'error' && <X size={16} className="text-red-500" />}
+                        {f.status === 'error' && (
+                          <div className="flex items-center gap-1">
+                            <X size={14} className="text-red-500" />
+                            <button onClick={() => {/* Retry logic */}} className="text-xs text-orange-600 hover:text-orange-700">Reintentar</button>
+                          </div>
+                        )}
                         <button onClick={() => removeFile(f.id)} className="p-1 rounded hover:bg-gray-200 text-gray-400 hover:text-red-500"><X size={14} /></button>
                       </div>
                     ))}

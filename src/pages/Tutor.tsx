@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Send, MessageSquare, Sparkles, Lightbulb, HelpCircle, FileText } from 'lucide-react';
+import { ArrowLeft, Send, MessageSquare, Sparkles, Lightbulb, HelpCircle, FileText, AlertCircle } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { aiService } from '../services/ai';
-import { Button, EmptyState } from '../components/UI';
+import { aiRouter } from '../services/ai/router';
+import { Button, EmptyState, Badge } from '../components/UI';
 import { TutorMessage } from '../types';
 import { v4 as uuid } from 'uuid';
 
@@ -57,11 +58,24 @@ export function TutorPage() {
       {/* Header */}
       <div className="flex items-center gap-3 mb-4 shrink-0">
         <button onClick={() => navigate(`/app/set/${id}`)} className="p-2 rounded-lg hover:bg-gray-100 text-gray-500"><ArrowLeft size={18} /></button>
-        <div>
-          <h1 className="text-lg font-bold text-gray-800 flex items-center gap-2"><Sparkles size={16} className="text-orange-500" />Tutor IA</h1>
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <h1 className="text-lg font-bold text-gray-800 flex items-center gap-2"><Sparkles size={16} className="text-orange-500" />Tutor IA</h1>
+            {aiRouter.isDemoMode() && <Badge color="orange">Demo</Badge>}
+          </div>
           <p className="text-xs text-gray-500">{studySet.title}</p>
         </div>
       </div>
+
+      {/* Demo mode notice */}
+      {aiRouter.isDemoMode() && messages.length <= 1 && (
+        <div className="mb-4 p-3 rounded-xl bg-orange-50 border border-orange-200 flex items-start gap-2 shrink-0">
+          <AlertCircle size={14} className="text-orange-600 shrink-0 mt-0.5" />
+          <p className="text-xs text-orange-700">
+            <strong>Modo demostración:</strong> Las respuestas son predefinidas. Conecta un proveedor de IA para respuestas personalizadas basadas en tu material.
+          </p>
+        </div>
+      )}
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto space-y-4 pb-4">

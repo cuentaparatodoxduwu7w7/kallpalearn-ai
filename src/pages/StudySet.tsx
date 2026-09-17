@@ -1,8 +1,9 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Brain, FileCheck, PenTool, FileText, BookOpen, MessageSquare, Headphones, FolderOpen, ArrowLeft, RotateCcw, Play, Clock } from 'lucide-react';
+import { Brain, FileCheck, PenTool, FileText, BookOpen, MessageSquare, Headphones, FolderOpen, ArrowLeft, RotateCcw, Play, Clock, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { Button, ProgressBar, Badge, EmptyState, ConfirmDialog } from '../components/UI';
 import { useState } from 'react';
+import { aiRouter } from '../services/ai/router';
 
 export function StudySetPage() {
   const { id } = useParams<{ id: string }>();
@@ -45,6 +46,7 @@ export function StudySetPage() {
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
             {studySet.folderId && <Badge color="orange"><FolderOpen size={10} className="mr-1" />Carpeta</Badge>}
+            {aiRouter.isDemoMode() && <Badge color="orange">Modo Demo</Badge>}
           </div>
           <h1 className="text-2xl font-bold text-gray-800">{studySet.title}</h1>
           <p className="text-gray-500 text-sm mt-1">{studySet.description}</p>
@@ -55,6 +57,37 @@ export function StudySetPage() {
           </div>
         </div>
       </div>
+
+      {/* Source files status */}
+      {studySet.sourceFiles.length > 0 && (
+        <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+          <h2 className="font-semibold text-gray-800 mb-3">Fuentes de material</h2>
+          <div className="space-y-2">
+            {studySet.sourceFiles.map(source => (
+              <div key={source.id} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50">
+                <FileText size={16} className="text-gray-400 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-700 truncate">{source.name}</p>
+                </div>
+                {source.status === 'completed' && <CheckCircle size={16} className="text-green-500" />}
+                {source.status === 'error' && (
+                  <div className="flex items-center gap-2">
+                    <AlertCircle size={14} className="text-red-500" />
+                    <span className="text-xs text-red-600">{source.errorMessage || 'Error'}</span>
+                    <button className="text-xs text-orange-600 hover:text-orange-700 font-medium">Reintentar</button>
+                  </div>
+                )}
+                {['uploading', 'processing', 'extracting', 'chunking', 'indexing', 'generating'].includes(source.status) && (
+                  <div className="flex items-center gap-2">
+                    <Loader2 size={14} className="text-orange-500 animate-spin" />
+                    <span className="text-xs text-gray-500">{Math.round(source.progress)}%</span>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Progress */}
       <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">

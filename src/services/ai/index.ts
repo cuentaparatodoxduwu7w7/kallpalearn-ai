@@ -1,10 +1,10 @@
 /**
- * AI Service Layer
- * This module provides stubs for AI functionality.
- * Replace implementations with real API calls when connecting to backend.
+ * AI Service - Legacy compatibility layer
+ * Mantiene compatibilidad con el código existente mientras usa el nuevo router
  */
 
-import { Flashcard, QuizQuestion, WrittenQuestion, FillBlank, Note, TutorMessage, ResolveResult, Podcast } from '../types';
+import { aiRouter } from './router';
+import { Flashcard, QuizQuestion, WrittenQuestion, FillBlank, Note, TutorMessage, Podcast, ResolveResult } from '../../types';
 import { v4 as uuid } from 'uuid';
 
 // Simulated delay
@@ -13,7 +13,6 @@ const delay = (ms: number) => new Promise(r => setTimeout(r, ms));
 export const aiService = {
   /**
    * Generate flashcards from source material
-   * TODO: Connect to LLM API
    */
   async generateFlashcards(_material: string, _count: number = 10): Promise<Flashcard[]> {
     await delay(1500);
@@ -22,7 +21,6 @@ export const aiService = {
 
   /**
    * Generate quiz questions
-   * TODO: Connect to LLM API
    */
   async generateQuiz(_material: string, _count: number = 10): Promise<QuizQuestion[]> {
     await delay(1500);
@@ -31,7 +29,6 @@ export const aiService = {
 
   /**
    * Generate written test questions
-   * TODO: Connect to LLM API
    */
   async generateWrittenTest(_material: string): Promise<WrittenQuestion[]> {
     await delay(1500);
@@ -40,7 +37,6 @@ export const aiService = {
 
   /**
    * Generate fill-in-the-blank exercises
-   * TODO: Connect to LLM API
    */
   async generateFillBlanks(_material: string): Promise<FillBlank[]> {
     await delay(1500);
@@ -49,7 +45,6 @@ export const aiService = {
 
   /**
    * Generate smart notes
-   * TODO: Connect to LLM API
    */
   async generateNotes(_material: string): Promise<Note> {
     await delay(1500);
@@ -66,15 +61,23 @@ export const aiService = {
   },
 
   /**
-   * Chat with AI tutor
-   * TODO: Connect to LLM API with RAG from study set materials
+   * Chat with AI tutor - Now uses the router
    */
-  async chatWithTutor(_setId: string, _messages: TutorMessage[], _userMessage: string): Promise<TutorMessage> {
-    await delay(1000);
+  async chatWithTutor(_setId: string, messages: TutorMessage[], userMessage: string): Promise<TutorMessage> {
+    // Convertir mensajes al formato del router
+    const chatMessages = messages.map(m => ({
+      role: m.role as 'user' | 'assistant',
+      content: m.content
+    }));
+    
+    chatMessages.push({ role: 'user' as const, content: userMessage });
+    
+    const response = await aiRouter.chat(chatMessages);
+    
     return {
       id: uuid(),
       role: 'assistant',
-      content: 'Esta respuesta será generada por IA cuando conectemos el backend. Por ahora, usa los datos de demostración.',
+      content: response,
       timestamp: new Date().toISOString(),
       suggestions: ['Explícalo más simple', 'Dame un ejemplo', 'Hazme una pregunta'],
     };
@@ -82,7 +85,6 @@ export const aiService = {
 
   /**
    * Evaluate written answer
-   * TODO: Connect to LLM API
    */
   async evaluateAnswer(_question: string, _modelAnswer: string, _userAnswer: string): Promise<{ score: number; feedback: string }> {
     await delay(1000);
@@ -91,7 +93,6 @@ export const aiService = {
 
   /**
    * Generate podcast audio
-   * TODO: Connect to TTS API
    */
   async generatePodcast(_material: string, _title: string): Promise<Podcast> {
     await delay(2000);
@@ -106,7 +107,6 @@ export const aiService = {
 
   /**
    * Solve problem from image
-   * TODO: Connect to Vision API
    */
   async solveFromImage(_imageUrl: string): Promise<ResolveResult> {
     await delay(2000);
@@ -123,10 +123,23 @@ export const aiService = {
 
   /**
    * Process uploaded file and extract text
-   * TODO: Connect to document processing API
    */
   async processFile(_file: File): Promise<string> {
     await delay(2000);
     return '';
   },
+
+  /**
+   * Get provider info
+   */
+  getProviderInfo() {
+    return aiRouter.getProviderInfo();
+  },
+
+  /**
+   * Check if in demo mode
+   */
+  isDemoMode(): boolean {
+    return aiRouter.isDemoMode();
+  }
 };
