@@ -1,11 +1,15 @@
 {
-  "name": "sandbox-workspace",
+  "name": "kallpalearn-ai",
+  "version": "1.0.0",
+  "description": "Plataforma educativa con IA que convierte material de estudio en múltiples métodos de aprendizaje",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "typecheck": "tsc --noEmit"
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.1.0",
