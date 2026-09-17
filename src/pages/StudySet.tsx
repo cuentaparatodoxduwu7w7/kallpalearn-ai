@@ -41,6 +41,29 @@ export function StudySetPage() {
     }
   };
 
+  const retrySource = (sourceId: string) => {
+    // Reiniciar el estado de la fuente a "queued" para reintentar el procesamiento
+    const updatedSources = studySet.sourceFiles.map(s => 
+      s.id === sourceId 
+        ? { ...s, status: 'queued' as const, progress: 0, errorMessage: undefined }
+        : s
+    );
+    const updated = { ...studySet, sourceFiles: updatedSources };
+    saveSet(updated);
+    addToast('info', 'Reintentando procesamiento...');
+    
+    // Simular re-procesamiento
+    setTimeout(() => {
+      const finalSources = updated.sourceFiles.map(s => 
+        s.id === sourceId 
+          ? { ...s, status: 'completed' as const, progress: 100 }
+          : s
+      );
+      saveSet({ ...studySet, sourceFiles: finalSources });
+      addToast('success', 'Fuente procesada correctamente');
+    }, 2000);
+  };
+
   const sections = [
     { id: 'flashcards', label: 'Flashcards', icon: Brain, path: `/app/set/${id}/flashcards`, color: 'from-orange-400 to-orange-500', count: studySet.flashcards.length },
     { id: 'quiz', label: 'Quiz', icon: FileCheck, path: `/app/set/${id}/quiz`, color: 'from-violet-400 to-violet-500', count: studySet.quiz.questions.length },
@@ -101,7 +124,7 @@ export function StudySetPage() {
                   <div className="flex items-center gap-2">
                     <AlertCircle size={14} className="text-red-500" />
                     <span className="text-xs text-red-600">{source.errorMessage || 'Error'}</span>
-                    <button className="text-xs text-orange-600 hover:text-orange-700 font-medium">Reintentar</button>
+                    <button onClick={() => retrySource(source.id)} className="text-xs text-orange-600 hover:text-orange-700 font-medium">Reintentar</button>
                   </div>
                 )}
                 {['uploading', 'processing', 'extracting', 'chunking', 'indexing', 'generating'].includes(source.status) && (

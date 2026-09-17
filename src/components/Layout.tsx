@@ -8,7 +8,6 @@ const navItems = [
   { path: '/app', icon: Home, label: 'Inicio' },
   { path: '/app/sets', icon: BookOpen, label: 'Mis Sets' },
   { path: '/app/folders', icon: FolderOpen, label: 'Carpetas' },
-  { path: '/app/tutor', icon: MessageSquare, label: 'Tutor IA' },
   { path: '/app/resolve', icon: HelpCircle, label: 'Resolver' },
   { path: '/app/progress', icon: BarChart3, label: 'Progreso' },
   { path: '/app/settings', icon: Settings, label: 'Configuración' },

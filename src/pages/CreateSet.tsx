@@ -65,6 +65,28 @@ export function CreateSetPage() {
 
   const removeFile = (id: string) => setFiles(prev => prev.filter(f => f.id !== id));
 
+  const retryFile = (id: string) => {
+    setFiles(prev => prev.map(f => {
+      if (f.id === id) {
+        // Reiniciar el proceso de subida
+        let progress = 0;
+        const interval = setInterval(() => {
+          progress += Math.random() * 30;
+          if (progress >= 100) {
+            progress = 100;
+            clearInterval(interval);
+            setFiles(prev => prev.map(file => file.id === id ? { ...file, status: 'completed', progress: 100, errorMessage: undefined } : file));
+            addToast('success', `Archivo ${f.name} procesado correctamente`);
+          } else {
+            setFiles(prev => prev.map(file => file.id === id ? { ...file, progress: Math.min(progress, 99), status: 'processing' } : file));
+          }
+        }, 300);
+        return { ...f, status: 'uploading' as const, progress: 0, errorMessage: undefined };
+      }
+      return f;
+    }));
+  };
+
   const hasContent = files.some(f => f.status === 'completed') || pastedText.trim().length > 0 || youtubeUrl.trim().length > 0 || websiteUrl.trim().length > 0;
 
   const toggleMethod = (id: string) => {
@@ -221,7 +243,7 @@ export function CreateSetPage() {
                         {f.status === 'error' && (
                           <div className="flex items-center gap-1">
                             <X size={14} className="text-red-500" />
-                            <button onClick={() => {/* Retry logic */}} className="text-xs text-orange-600 hover:text-orange-700">Reintentar</button>
+                            <button onClick={() => retryFile(f.id)} className="text-xs text-orange-600 hover:text-orange-700 font-medium">Reintentar</button>
                           </div>
                         )}
                         <button onClick={() => removeFile(f.id)} className="p-1 rounded hover:bg-gray-200 text-gray-400 hover:text-red-500"><X size={14} /></button>

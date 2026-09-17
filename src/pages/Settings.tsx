@@ -16,7 +16,17 @@ export function SettingsPage() {
   const [studyReminders, setStudyReminders] = useState(user?.preferences.studyReminders ?? true);
 
   const handleSave = () => {
-    addToast('success', 'Configuración guardada');
+    // En producción, esto llamaría a profilesService.updateProfile
+    // Por ahora, solo mostramos un toast de confirmación
+    if (!name.trim()) {
+      addToast('error', 'El nombre no puede estar vacío');
+      return;
+    }
+    
+    // Simular guardado
+    setTimeout(() => {
+      addToast('success', 'Configuración guardada correctamente');
+    }, 500);
   };
 
   const handleLogout = () => {

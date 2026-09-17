@@ -1,8 +1,9 @@
 import { useState, useRef } from 'react';
-import { Upload, Camera, Image, Loader2, CheckCircle, ArrowLeft, HelpCircle } from 'lucide-react';
+import { Upload, Camera, Image, Loader2, CheckCircle, ArrowLeft, HelpCircle, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { Button, EmptyState } from '../components/UI';
+import { Button, EmptyState, Badge } from '../components/UI';
 import { ResolveResult } from '../types';
+import { aiRouter } from '../services/ai/router';
 
 export function ResolvePage() {
   const navigate = useNavigate();
@@ -61,11 +62,24 @@ export function ResolvePage() {
     <div className="max-w-2xl mx-auto space-y-6">
       <div className="flex items-center gap-3">
         <button onClick={() => navigate('/app')} className="p-2 rounded-lg hover:bg-gray-100 text-gray-500"><ArrowLeft size={18} /></button>
-        <div>
-          <h1 className="text-lg font-bold text-gray-800">Resolver ejercicio</h1>
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <h1 className="text-lg font-bold text-gray-800">Resolver ejercicio</h1>
+            {aiRouter.isDemoMode() && <Badge color="orange">Modo Demo</Badge>}
+          </div>
           <p className="text-xs text-gray-500">Sube una imagen y obtén la solución paso a paso</p>
         </div>
       </div>
+
+      {/* Demo mode indicator */}
+      {aiRouter.isDemoMode() && (
+        <div className="p-3 rounded-xl bg-orange-50 border border-orange-200 flex items-start gap-2">
+          <AlertCircle size={16} className="text-orange-600 shrink-0 mt-0.5" />
+          <div className="text-xs text-orange-700">
+            <strong>Modo demostración:</strong> La resolución de ejercicios con IA requiere configurar un proveedor de visión en el backend. Los resultados mostrados son de demostración.
+          </div>
+        </div>
+      )}
 
       {!imageUrl && !result && (
         <div className="space-y-4">

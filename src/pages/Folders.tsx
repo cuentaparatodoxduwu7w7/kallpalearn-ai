@@ -13,6 +13,7 @@ export function FoldersPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [editingFolder, setEditingFolder] = useState<Folder | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [movingSetId, setMovingSetId] = useState<string | null>(null);
   const [newName, setNewName] = useState('');
   const [newColor, setNewColor] = useState(COLORS[0]);
 
@@ -41,6 +42,16 @@ export function FoldersPage() {
     addToast('info', 'Carpeta eliminada');
   };
 
+  const handleMoveSet = (targetFolderId: string | undefined) => {
+    if (!movingSetId) return;
+    const set = sets.find(s => s.id === movingSetId);
+    if (set) {
+      saveSet({ ...set, folderId: targetFolderId });
+      addToast('success', targetFolderId ? 'Set movido a carpeta' : 'Set movido a "Todos los sets"');
+    }
+    setMovingSetId(null);
+  };
+
   const getSetsInFolder = (folderId: string) => sets.filter(s => s.folderId === folderId);
   const allSets = sets.filter(s => !s.folderId);
 
@@ -67,6 +78,19 @@ export function FoldersPage() {
           <div className="flex gap-3 justify-end"><Button variant="secondary" onClick={() => setEditingFolder(null)}>Cancelar</Button><Button onClick={handleEdit}>Guardar</Button></div>
         </div>
       </Modal>
+      <Modal isOpen={!!movingSetId} onClose={() => setMovingSetId(null)} title="Mover a carpeta">
+        <div className="space-y-2">
+          <button onClick={() => handleMoveSet(undefined)} className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition">
+            <p className="text-sm font-medium text-gray-800">Todos los sets (sin carpeta)</p>
+          </button>
+          {folders.map(folder => (
+            <button key={folder.id} onClick={() => handleMoveSet(folder.id)} className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition flex items-center gap-2">
+              <div className="w-4 h-4 rounded" style={{ backgroundColor: folder.color }} />
+              <p className="text-sm font-medium text-gray-800">{folder.name}</p>
+            </button>
+          ))}
+        </div>
+      </Modal>
 
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-800">Carpetas</h1>
@@ -84,13 +108,25 @@ export function FoldersPage() {
         ) : (
           <div className="grid sm:grid-cols-2 gap-3">
             {allSets.map(set => (
-              <Link key={set.id} to={`/app/set/${set.id}`} className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition">
-                <BookOpen size={16} className="text-orange-500 shrink-0" />
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-gray-800 truncate">{set.title}</p>
-                  <p className="text-xs text-gray-400">{set.flashcards.length} tarjetas</p>
-                </div>
-              </Link>
+              <div key={set.id} className="flex items-center gap-2">
+                <Link to={`/app/set/${set.id}`} className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition flex-1 min-w-0">
+                  <BookOpen size={16} className="text-orange-500 shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-gray-800 truncate">{set.title}</p>
+                    <p className="text-xs text-gray-400">{set.flashcards.length} tarjetas</p>
+                  </div>
+                </Link>
+                <button 
+                  onClick={(e) => { e.preventDefault(); setMovingSetId(set.id); }}
+                  className="p-2 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-orange-500 transition"
+                  title="Mover a carpeta"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M5 12h14"></path>
+                    <path d="m12 5 7 7-7 7"></path>
+                  </svg>
+                </button>
+              </div>
             ))}
           </div>
         )}
@@ -124,9 +160,21 @@ export function FoldersPage() {
                 {folderSets.length > 0 && (
                   <div className="space-y-1">
                     {folderSets.slice(0, 3).map(set => (
-                      <Link key={set.id} to={`/app/set/${set.id}`} className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 text-sm text-gray-700 truncate">
-                        <BookOpen size={12} className="text-gray-400 shrink-0" />{set.title}
-                      </Link>
+                      <div key={set.id} className="flex items-center gap-1">
+                        <Link to={`/app/set/${set.id}`} className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 text-sm text-gray-700 truncate flex-1 min-w-0">
+                          <BookOpen size={12} className="text-gray-400 shrink-0" />{set.title}
+                        </Link>
+                        <button 
+                          onClick={(e) => { e.preventDefault(); setMovingSetId(set.id); }}
+                          className="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-orange-500 transition shrink-0"
+                          title="Mover a otra carpeta"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M5 12h14"></path>
+                            <path d="m12 5 7 7-7 7"></path>
+                          </svg>
+                        </button>
+                      </div>
                     ))}
                     {folderSets.length > 3 && <p className="text-xs text-gray-400 px-2">+{folderSets.length - 3} más</p>}
                   </div>

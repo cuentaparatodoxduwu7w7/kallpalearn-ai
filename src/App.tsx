@@ -57,7 +57,6 @@ function AppRoutes() {
         <Route path="progress" element={<ProgressPage />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="profile" element={<LearnerProfilePage />} />
-        <Route path="tutor" element={<Navigate to="/app" replace />} />
       </Route>
 
       {/* Catch all */}
