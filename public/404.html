@@ -1,16 +1,39 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8">
   <title>KallpaLearn AI</title>
   <script>
-    // Redirigir todas las rutas a index.html para SPA
-    sessionStorage.redirect = location.href;
+    // GitHub Pages SPA Redirect Script
+    // Este script preserva la ruta original y redirige al index.html
+    
+    (function() {
+      // Obtener la ruta completa (pathname + search + hash)
+      var redirect = window.location.pathname + window.location.search + window.location.hash;
+      
+      // Detectar el nombre del repositorio desde la URL
+      // Formato: https://username.github.io/repo-name/path
+      var pathSegments = window.location.pathname.split('/').filter(Boolean);
+      var repoName = pathSegments[0] || '';
+      
+      // Guardar la ruta completa en sessionStorage
+      // La ruta incluye el nombre del repositorio si existe
+      sessionStorage.setItem('spa-redirect', redirect);
+      
+      // Redirigir al index.html del repositorio
+      // Si estamos en /repo-name/some/path, redirigir a /repo-name/
+      if (repoName) {
+        window.location.replace('/' + repoName + '/');
+      } else {
+        window.location.replace('/');
+      }
+    })();
   </script>
-  <meta http-equiv="refresh" content="0;url=/"></meta>
 </head>
 <body>
-  <p>Redireccionando...</p>
+  <noscript>
+    <p>Esta aplicación requiere JavaScript habilitado.</p>
+    <p><a href="/">Ir al inicio</a></p>
+  </noscript>
 </body>
 </html>

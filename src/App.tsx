@@ -30,6 +30,25 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+// Detectar basename para GitHub Pages
+function getBasename(): string {
+  // En desarrollo, usar '/'
+  if (import.meta.env.DEV) {
+    return '/';
+  }
+  
+  // En producción, detectar el nombre del repositorio desde la URL
+  const pathParts = window.location.pathname.split('/');
+  
+  // Si la URL tiene formato /repo-name/..., extraer repo-name
+  // GitHub Pages usa: https://username.github.io/repo-name/
+  if (pathParts.length > 1 && pathParts[1] && !pathParts[1].startsWith('app') && pathParts[1] !== '') {
+    return `/${pathParts[1]}`;
+  }
+  
+  return '/';
+}
+
 function AppRoutes() {
   return (
     <Routes>
@@ -66,8 +85,10 @@ function AppRoutes() {
 }
 
 export default function App() {
+  const basename = getBasename();
+  
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={basename}>
       <AppProvider>
         <AppRoutes />
       </AppProvider>
