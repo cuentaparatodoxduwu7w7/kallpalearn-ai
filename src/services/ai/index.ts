@@ -61,26 +61,91 @@ export const aiService = {
   },
 
   /**
-   * Chat with AI tutor - Now uses the router
+   * Chat with AI tutor - Uses Edge Function with RAG
    */
-  async chatWithTutor(_setId: string, messages: TutorMessage[], userMessage: string): Promise<TutorMessage> {
-    // Convertir mensajes al formato del router
-    const chatMessages = messages.map(m => ({
-      role: m.role as 'user' | 'assistant',
-      content: m.content
-    }));
-    
-    chatMessages.push({ role: 'user' as const, content: userMessage });
-    
-    const response = await aiRouter.chat(chatMessages);
-    
-    return {
-      id: uuid(),
-      role: 'assistant',
-      content: response,
-      timestamp: new Date().toISOString(),
-      suggestions: ['Explícalo más simple', 'Dame un ejemplo', 'Hazme una pregunta'],
-    };
+  async chatWithTutor(setId: string, messages: TutorMessage[], userMessage: string): Promise<TutorMessage> {
+    try {
+      // Intentar usar la Edge Function real
+      const { edgeFunctionsService } = await import('../edge-functions');
+      
+      const conversationHistory = messages.map(m => ({
+        role: m.role as 'user' | 'assistant',
+        content: m.content
+      }));
+      
+      const response = await edgeFunctionsService.chatWithTutor(
+        setId,
+        userMessage,
+        conversationHistory
+      );
+      
+      // Si la respuesta es de demo, usar el router como fallback
+      if (response.provider === 'demo') {
+        const chatMessages = messages.map(m => ({
+          role: m.role as 'user' | 'assistant',
+          content: m.content
+        }));
+        chatMessages.push({ role: 'user' as const, content: userMessage });
+        
+        const fallbackResponse = await aiRouter.chat(chatMessages);
+        
+        return {
+          id: uuid(),
+          role: 'assistant',
+          content: fallbackResponse,
+          timestamp: new Date().toISOString(),
+          suggestions: ['Explícalo más simple', 'Dame un ejemplo', 'Hazme una pregunta'],
+        };
+      }
+      
+      // Respuesta real con citas
+      let content = response.content;
+      
+      // Agregar citas si están disponibles
+      if (response.citations && response.citations.length > 0) {
+        const citationsText = response.citations
+          .map(c => {
+            const meta = c.metadata || {};
+            if (meta.page) return `Página ${meta.page}`;
+            if (meta.slide) return `Diapositiva ${meta.slide}`;
+            if (meta.section) return meta.section;
+            return null;
+          })
+          .filter(Boolean)
+          .join(', ');
+        
+        if (citationsText) {
+          content += `\n\n_Fuentes: ${citationsText}_`;
+        }
+      }
+      
+      return {
+        id: uuid(),
+        role: 'assistant',
+        content,
+        timestamp: new Date().toISOString(),
+        suggestions: ['Explícalo más simple', 'Dame un ejemplo', 'Hazme una pregunta'],
+      };
+    } catch (error) {
+      console.error('Error in chatWithTutor:', error);
+      
+      // Fallback al router si la Edge Function falla
+      const chatMessages = messages.map(m => ({
+        role: m.role as 'user' | 'assistant',
+        content: m.content
+      }));
+      chatMessages.push({ role: 'user' as const, content: userMessage });
+      
+      const response = await aiRouter.chat(chatMessages);
+      
+      return {
+        id: uuid(),
+        role: 'assistant',
+        content: response,
+        timestamp: new Date().toISOString(),
+        suggestions: ['Explícalo más simple', 'Dame un ejemplo', 'Hazme una pregunta'],
+      };
+    }
   },
 
   /**

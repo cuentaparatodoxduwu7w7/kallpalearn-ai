@@ -17,6 +17,7 @@ import { FoldersPage, SetsListPage } from './pages/Folders';
 import { ProgressPage } from './pages/Progress';
 import { SettingsPage } from './pages/Settings';
 import { LearnerProfilePage } from './pages/LearnerProfile';
+import { SystemStatusPage } from './pages/SystemStatus';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useApp();
@@ -76,6 +77,7 @@ function AppRoutes() {
         <Route path="progress" element={<ProgressPage />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="profile" element={<LearnerProfilePage />} />
+        <Route path="system-status" element={<SystemStatusPage />} />
       </Route>
 
       {/* Catch all */}
