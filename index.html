@@ -93,12 +93,31 @@
   <body>
     <div id="root"></div>
     <script>
-      // Manejar redirección desde 404.html para SPA routing en GitHub Pages
+      // GitHub Pages SPA Redirect Handler
+      // Este script lee la ruta preservada por 404.html y la restaura
       (function() {
-        var redirect = sessionStorage.redirect;
-        delete sessionStorage.redirect;
-        if (redirect && redirect !== location.href) {
-          history.replaceState(null, null, redirect);
+        'use strict';
+        
+        // Leer la ruta guardada por 404.html
+        var spaRedirect = sessionStorage.getItem('spa-redirect');
+        
+        if (spaRedirect) {
+          // Limpiar sessionStorage
+          sessionStorage.removeItem('spa-redirect');
+          
+          // Detectar el nombre del repositorio
+          var pathSegments = window.location.pathname.split('/').filter(Boolean);
+          var repoName = pathSegments[0] || '';
+          
+          // La ruta guardada incluye el nombre del repositorio
+          // Necesitamos verificar si ya estamos en la ruta correcta
+          var currentPath = window.location.pathname;
+          
+          // Si la ruta guardada es diferente a la actual, restaurarla
+          if (spaRedirect !== currentPath) {
+            // Usar replaceState para cambiar la URL sin recargar
+            window.history.replaceState(null, '', spaRedirect);
+          }
         }
       })();
     </script>
